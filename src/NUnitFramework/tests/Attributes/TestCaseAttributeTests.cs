@@ -136,6 +136,52 @@ namespace NUnit.Framework.Attributes
             Assert.AreEqual(15, ts.Seconds);
         }
 
+        [TestCase("4:44:15", "4:44:15")]
+        public void CanConvertStringsToTimeSpanArray(params TimeSpan[] values)
+        {
+            Assert.IsNotNull(values);
+            Assert.AreEqual(2, values.Length);
+
+            foreach (var ts in values)
+            {
+                Assert.AreEqual(4, ts.Hours);
+                Assert.AreEqual(44, ts.Minutes);
+                Assert.AreEqual(15, ts.Seconds);
+            }
+        }
+
+        [TestCase("4:44:15", "4:44:15", "4:44:15")]
+        public void CanConvertStringsToTimeSpansWithParams(TimeSpan ts, params TimeSpan[] values)
+        {
+            Assert.IsNotNull(values);
+            Assert.AreEqual(2, values.Length);
+
+            Assert.AreEqual(4, ts.Hours);
+            Assert.AreEqual(44, ts.Minutes);
+            Assert.AreEqual(15, ts.Seconds);
+
+            foreach (var ts1 in values)
+            {
+                Assert.AreEqual(4, ts.Hours);
+                Assert.AreEqual(44, ts.Minutes);
+                Assert.AreEqual(15, ts.Seconds);
+            }
+        }
+
+        [TestCase(new object[] { "4:44:15", "4:44:15" })]
+        public void CanConvertObjectArrayToTimeSpanArray(TimeSpan[] values)
+        {
+            Assert.IsNotNull(values);
+            Assert.AreEqual(2, values.Length);
+
+            foreach (var ts in values)
+            {
+                Assert.AreEqual(4, ts.Hours);
+                Assert.AreEqual(44, ts.Minutes);
+                Assert.AreEqual(15, ts.Seconds);
+            }
+        }
+
         [TestCase("4:44:15", ExpectedResult = "4:44:15")]
         public TimeSpan CanConvertExpectedResultStringToTimeSpan(TimeSpan ts)
         {

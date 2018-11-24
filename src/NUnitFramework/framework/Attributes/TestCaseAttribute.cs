@@ -264,6 +264,8 @@ namespace NUnit.Framework
                 int argsNeeded = parameters.Length;
                 int argsProvided = Arguments.Length;
 
+                var methodName = method.Name;
+
                 parms = new TestCaseParameters(this);
 
                 // Special handling for ExpectedResult (see if it needs to be converted into method return type)
@@ -301,7 +303,10 @@ namespace NUnit.Framework
                             int length = argsProvided - argsNeeded + 1;
                             Array array = Array.CreateInstance(elementType, length);
                             for (int i = 0; i < length; i++)
-                                array.SetValue(parms.Arguments[argsNeeded + i - 1], i);
+                            {
+                                object value = ConvertValue(parms.Arguments[argsNeeded + i - 1], elementType);
+                                array.SetValue(value, i);
+                            }
 
                             newArglist[argsNeeded - 1] = array;
                             parms.Arguments = newArglist;
@@ -339,12 +344,19 @@ namespace NUnit.Framework
                 //    parms.Arguments = new object[]{parms.Arguments};
 
                 // Special handling when sole argument is an object[]
-                if (argsNeeded == 1 && method.GetParameters()[0].ParameterType == typeof(object[]))
+                if (argsNeeded == 1 && method.GetParameters()[0].ParameterType.IsArray)
                 {
                     if (argsProvided > 1 ||
-                        argsProvided == 1 && parms.Arguments[0].GetType() != typeof(object[]))
+                        argsProvided == 1 && parms.Arguments[0].GetType().IsArray)
                     {
-                        parms.Arguments = new object[] { parms.Arguments };
+                        Array array = Array.CreateInstance(parms.Arguments[0].GetType(), parms.Arguments.Length);
+                        for (int i = 0; i < array.Length; i++)
+                        {
+                            object value = ConvertValue(parms.Arguments[i], parms.Arguments[0].GetType());
+                            array.SetValue(value, i);
+                        }
+
+                        parms.Arguments[0] = array;
                     }
                 }
 
@@ -357,6 +369,16 @@ namespace NUnit.Framework
             }
 
             return parms;
+        }
+
+        private static object ConvertValue(object arg, Type type)
+        {
+            object value;
+
+            if (PerformSpecialConversion(arg, type, out value))
+                return value;
+            else
+                return arg;
         }
 
         /// <summary>
