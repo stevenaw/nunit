@@ -31,7 +31,7 @@ namespace NUnit.Framework.Assertions
 {
     public class AssertMultipleTests
     {
-        private static readonly ComplexNumber _complex = new ComplexNumber(5.2, 3.9);
+        //private static readonly ComplexNumber _complex = new ComplexNumber(5.2, 3.9);
 
         [TestCase(nameof(AM.EmptyBlock), 0)]
         [TestCase(nameof(AM.SingleAssertSucceeds), 1)]
@@ -149,42 +149,42 @@ namespace NUnit.Framework.Assertions
     [Explicit("Used to display error messages for visual confirmation")]
     public class MultipleAssertDemo
     {
-        private static readonly ComplexNumber _complex = new ComplexNumber(5.2, 3.9);
+        //private static readonly ComplexNumber _complex = new ComplexNumber(5.2, 3.9);
 
-        [Test]
-        // Shows multiple failures including one from Assert.Fail
-        public void MultipleAssertFailureDemo()
-        {
-            Assert.Multiple(() =>
-            {
-                Assert.That(_complex.RealPart, Is.EqualTo(5.0), "RealPart");
-                Assert.That(_complex.ImaginaryPart, Is.EqualTo(4.2), "ImaginaryPart");
-                Assert.Fail("Assert.Fail Called");
-            });
-        }
+        // Identical to AM.MethodCallsFailAfterTwoAssertsFail
+        //[Test]
+        //public void MultipleAssertFailureDemo()
+        //{
+        //    Assert.Multiple(() =>
+        //    {
+        //        Assert.That(_complex.RealPart, Is.EqualTo(5.0), "RealPart");
+        //        Assert.That(_complex.ImaginaryPart, Is.EqualTo(4.2), "ImaginaryPart");
+        //        Assert.Fail("Assert.Fail Called");
+        //    });
+        //}
 
-        [Test]
-        // Shows two failures followed by an exception
-        public void MultipleAssertErrorDemo()
-        {
-            Assert.Multiple(() =>
-            {
-                Assert.That(_complex.RealPart, Is.EqualTo(5.0), "RealPart");
-                Assert.That(_complex.ImaginaryPart, Is.EqualTo(4.2), "ImaginaryPart");
-                throw new Exception("Simulated Error");
-            });
-        }
+        // Identical to AM.ExceptionThrownAfterTwoFailures
+        //[Test]
+        //public void MultipleAssertErrorDemo()
+        //{
+        //    Assert.Multiple(() =>
+        //    {
+        //        Assert.That(_complex.RealPart, Is.EqualTo(5.0), "RealPart");
+        //        Assert.That(_complex.ImaginaryPart, Is.EqualTo(4.2), "ImaginaryPart");
+        //        throw new Exception("Simulated Error");
+        //    });
+        //}
     }
 
-    internal class ComplexNumber
-    {
-        public ComplexNumber(double realPart, double imaginaryPart)
-        {
-            RealPart = realPart;
-            ImaginaryPart = imaginaryPart;
-        }
+    //internal class ComplexNumber
+    //{
+    //    public ComplexNumber(double realPart, double imaginaryPart)
+    //    {
+    //        RealPart = realPart;
+    //        ImaginaryPart = imaginaryPart;
+    //    }
 
-        public double RealPart;
-        public double ImaginaryPart;
-    }
+    //    public double RealPart;
+    //    public double ImaginaryPart;
+    //}
 }
