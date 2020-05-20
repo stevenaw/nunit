@@ -67,7 +67,7 @@ namespace NUnit.Framework.Attributes
         {
             TimeoutFixture fixture = new TimeoutFixture();
             TestSuite suite = TestBuilder.MakeFixture(fixture);
-            TestMethod testMethod = (TestMethod)TestFinder.Find("InfiniteLoopWith50msTimeout", suite, false);
+            TestMethod testMethod = (TestMethod)TestFinder.Find(nameof(TimeoutFixture.InfiniteLoopWith50msTimeout), suite, false);
             ITestResult result = TestBuilder.RunTest(testMethod, fixture);
             Assert.That(result.ResultState, Is.EqualTo(ResultState.Failure));
             Assert.That(result.Message, Does.Contain("50ms"));
@@ -79,7 +79,7 @@ namespace NUnit.Framework.Attributes
         {
             TimeoutFixture fixture = new TimeoutFixtureWithTimeoutInSetUp();
             TestSuite suite = TestBuilder.MakeFixture(fixture);
-            TestMethod testMethod = (TestMethod)TestFinder.Find("Test1", suite, false);
+            TestMethod testMethod = (TestMethod)TestFinder.Find(nameof(TimeoutFixtureWithTimeoutInSetUp.Test1), suite, false);
             ITestResult result = TestBuilder.RunTest(testMethod, fixture);
             Assert.That(result.ResultState, Is.EqualTo(ResultState.Failure));
             Assert.That(result.Message, Does.Contain("50ms"));
@@ -91,7 +91,7 @@ namespace NUnit.Framework.Attributes
         {
             TimeoutFixture fixture = new TimeoutFixtureWithTimeoutInTearDown();
             TestSuite suite = TestBuilder.MakeFixture(fixture);
-            TestMethod testMethod = (TestMethod)TestFinder.Find("Test1", suite, false);
+            TestMethod testMethod = (TestMethod)TestFinder.Find(nameof(TimeoutFixtureWithTimeoutInTearDown.Test1), suite, false);
             ITestResult result = TestBuilder.RunTest(testMethod, fixture);
             Assert.That(result.ResultState, Is.EqualTo(ResultState.Failure));
             Assert.That(result.Message, Does.Contain("50ms"));
@@ -105,7 +105,7 @@ namespace NUnit.Framework.Attributes
             Assert.That(suiteResult.ResultState, Is.EqualTo(ResultState.ChildFailure));
             Assert.That(suiteResult.Message, Is.EqualTo(TestResult.CHILD_ERRORS_MESSAGE));
             Assert.That(suiteResult.ResultState.Site, Is.EqualTo(FailureSite.Child));
-            ITestResult result = TestFinder.Find("Test2WithInfiniteLoop", suiteResult, false);
+            ITestResult result = TestFinder.Find(nameof(TimeoutFixtureWithTimeoutOnFixture.Test2WithInfiniteLoop), suiteResult, false);
             Assert.That(result.ResultState, Is.EqualTo(ResultState.Failure));
             Assert.That(result.Message, Does.Contain("50ms"));
         }
@@ -115,7 +115,7 @@ namespace NUnit.Framework.Attributes
         {
             TimeoutTestCaseFixture fixture = new TimeoutTestCaseFixture();
             TestSuite suite = TestBuilder.MakeFixture(fixture);
-            TestMethod testMethod = (TestMethod)TestFinder.Find("TestTimeOutNotElapsed", suite, false);
+            TestMethod testMethod = (TestMethod)TestFinder.Find(nameof(TimeoutTestCaseFixture.TestTimeOutNotElapsed), suite, false);
             ITestResult result = TestBuilder.RunTest(testMethod, fixture);
             Assert.That(result.ResultState, Is.EqualTo(ResultState.Success));
         }
@@ -125,10 +125,27 @@ namespace NUnit.Framework.Attributes
         {
             TimeoutTestCaseFixture fixture = new TimeoutTestCaseFixture();
             TestSuite suite = TestBuilder.MakeFixture(fixture);
-            TestMethod testMethod = (TestMethod)TestFinder.Find("TestTimeOutElapsed", suite, false);
+            TestMethod testMethod = (TestMethod)TestFinder.Find(nameof(TimeoutTestCaseFixture.TestTimeOutElapsed), suite, false);
             ITestResult result = TestBuilder.RunTest(testMethod, fixture);
             Assert.That(result.ResultState, Is.EqualTo(ResultState.Failure));
             Assert.That(result.Message, Does.Contain("100ms"));
+        }
+
+        [Test]
+        public void TestTimeOutTestCaseWithOutElapsed()
+        {
+            TimeoutTestCaseFixture fixture = new TimeoutTestCaseFixture();
+            TestSuite suite = TestBuilder.MakeFixture(fixture);
+            ParameterizedMethodSuite methodSuite = (ParameterizedMethodSuite)TestFinder.Find(nameof(TimeoutTestCaseFixture.TestTimeOutTestCase), suite, false);
+            ITestResult result = TestBuilder.RunTest(methodSuite, fixture);
+
+            Assert.That(result.ResultState.Status, Is.EqualTo(TestStatus.Failed), "Suite result status");
+            Assert.That(result.Children.ToArray()[0].ResultState.Status, Is.EqualTo(TestStatus.Passed), "First test status");
+            Assert.That(result.Children.ToArray()[1].ResultState.Status, Is.EqualTo(TestStatus.Failed), "Second test status");
+
+            Assert.That(result.ResultState, Is.EqualTo(ResultState.ChildFailure), "Suite result");
+            Assert.That(result.Children.ToArray()[0].ResultState, Is.EqualTo(ResultState.Success), "First test");
+            Assert.That(result.Children.ToArray()[1].ResultState, Is.EqualTo(ResultState.Failure), "Second test");
         }
 
         [Explicit("Tests that demonstrate Timeout failure")]
@@ -150,21 +167,6 @@ namespace NUnit.Framework.Attributes
             public void TestTimesOutInSTA()
             {
                 while (true) ;
-            }
-
-            // TODO: The test in TimeoutTestCaseFixture work as expected when run
-            // directly by NUnit. It's only when run via TestBuilder as a second
-            // level test that the result is incorrect. We need to fix this.
-            [Test]
-            public void TestTimeOutTestCaseWithOutElapsed()
-            {
-                TimeoutTestCaseFixture fixture = new TimeoutTestCaseFixture();
-                TestSuite suite = TestBuilder.MakeFixture(fixture);
-                ParameterizedMethodSuite methodSuite = (ParameterizedMethodSuite)TestFinder.Find("TestTimeOutTestCase", suite, false);
-                ITestResult result = TestBuilder.RunTest(methodSuite, fixture);
-                Assert.That(result.ResultState, Is.EqualTo(ResultState.Failure), "Suite result");
-                Assert.That(result.Children.ToArray()[0].ResultState, Is.EqualTo(ResultState.Success), "First test");
-                Assert.That(result.Children.ToArray()[1].ResultState, Is.EqualTo(ResultState.Failure), "Second test");
             }
         }
 
