@@ -32,7 +32,7 @@ namespace NUnit.Framework.Internal
     /// TestNameGenerator is able to create test names according to
     /// a coded pattern.
     /// </summary>
-    public class TestNameGenerator
+    public class OriginalTestNameGenerator
     {
         // TODO: Using a static here is not good it's the easiest
         // way to get a temporary implementation without passing the
@@ -52,7 +52,7 @@ namespace NUnit.Framework.Internal
         /// <summary>
         /// Construct a TestNameGenerator
         /// </summary>
-        public TestNameGenerator()
+        public OriginalTestNameGenerator()
         {
             _pattern = DefaultTestNamePattern;
         }
@@ -61,7 +61,7 @@ namespace NUnit.Framework.Internal
         /// Construct a TestNameGenerator
         /// </summary>
         /// <param name="pattern">The pattern used by this generator.</param>
-        public TestNameGenerator(string pattern)
+        public OriginalTestNameGenerator(string pattern)
         {
             _pattern = pattern;
         }
@@ -87,11 +87,12 @@ namespace NUnit.Framework.Internal
             if (_fragments == null)
                 _fragments = BuildFragmentList(_pattern);
 
-            var fragmentStrings = new string[_fragments.Count];
-            for (var i = 0; i < _fragments.Count; i++)
-                fragmentStrings[i] = _fragments[i].GetText(testMethod, args);
+            var result = new StringBuilder();
 
-            return string.Join(string.Empty, fragmentStrings);
+            foreach (var fragment in _fragments)
+                result.Append(fragment.GetText(testMethod, args));
+
+            return result.ToString();
         }
 
         #region Helper Methods
@@ -263,17 +264,19 @@ namespace NUnit.Framework.Internal
                         display = builder.ToString();
                     }
                 }
-                else if (arg is double dec)
+                else if (arg is double)
                 {
-                    if (double.IsNaN(dec))
+                    double d = (double)arg;
+
+                    if (double.IsNaN(d))
                         display = "double.NaN";
-                    else if (double.IsPositiveInfinity(dec))
+                    else if (double.IsPositiveInfinity(d))
                         display = "double.PositiveInfinity";
-                    else if (double.IsNegativeInfinity(dec))
+                    else if (double.IsNegativeInfinity(d))
                         display = "double.NegativeInfinity";
-                    else if (dec == double.MaxValue)
+                    else if (d == double.MaxValue)
                         display = "double.MaxValue";
-                    else if (dec == double.MinValue)
+                    else if (d == double.MinValue)
                         display = "double.MinValue";
                     else
                     {
@@ -282,8 +285,10 @@ namespace NUnit.Framework.Internal
                         display += "d";
                     }
                 }
-                else if (arg is float f)
+                else if (arg is float)
                 {
+                    float f = (float)arg;
+
                     if (float.IsNaN(f))
                         display = "float.NaN";
                     else if (float.IsPositiveInfinity(f))
@@ -301,26 +306,28 @@ namespace NUnit.Framework.Internal
                         display += "f";
                     }
                 }
-                else if (arg is decimal db)
+                else if (arg is decimal)
                 {
-                    if (db == decimal.MinValue)
+                    decimal d = (decimal)arg;
+                    if (d == decimal.MinValue)
                         display = "decimal.MinValue";
-                    else if (db == decimal.MaxValue)
+                    else if (d == decimal.MaxValue)
                         display = "decimal.MaxValue";
                     else
                         display += "m";
                 }
-                else if (arg is long l)
+                else if (arg is long)
                 {
-                    if (l.Equals(long.MinValue))
+                    if (arg.Equals(long.MinValue))
                         display = "long.MinValue";
-                    else if (l.Equals(long.MaxValue))
+                    else if (arg.Equals(long.MaxValue))
                         display = "long.MaxValue";
                     else
                         display += "L";
                 }
-                else if (arg is ulong ul)
+                else if (arg is ulong)
                 {
+                    ulong ul = (ulong)arg;
                     if (ul == ulong.MinValue)
                         display = "ulong.MinValue";
                     else if (ul == ulong.MaxValue)
@@ -328,8 +335,9 @@ namespace NUnit.Framework.Internal
                     else
                         display += "UL";
                 }
-                else if (arg is string str)
+                else if (arg is string)
                 {
+                    var str = (string)arg;
                     bool tooLong = stringMax > 0 && str.Length > stringMax;
                     int limit = tooLong ? stringMax - THREE_DOTS.Length : 0;
 
@@ -347,50 +355,50 @@ namespace NUnit.Framework.Internal
                     sb.Append("\"");
                     display = sb.ToString();
                 }
-                else if (arg is char c)
+                else if (arg is char)
                 {
-                    display = "\'" + EscapeSingleChar(c) + "\'";
+                    display = "\'" + EscapeSingleChar((char)arg) + "\'";
                 }
-                else if (arg is int i)
+                else if (arg is int)
                 {
-                    if (i.Equals(int.MaxValue))
+                    if (arg.Equals(int.MaxValue))
                         display = "int.MaxValue";
-                    else if (i.Equals(int.MinValue))
+                    else if (arg.Equals(int.MinValue))
                         display = "int.MinValue";
                 }
-                else if (arg is uint ui)
+                else if (arg is uint)
                 {
-                    if (ui.Equals(uint.MaxValue))
+                    if (arg.Equals(uint.MaxValue))
                         display = "uint.MaxValue";
-                    else if (ui.Equals(uint.MinValue))
+                    else if (arg.Equals(uint.MinValue))
                         display = "uint.MinValue";
                 }
-                else if (arg is short s)
+                else if (arg is short)
                 {
-                    if (s.Equals(short.MaxValue))
+                    if (arg.Equals(short.MaxValue))
                         display = "short.MaxValue";
-                    else if (s.Equals(short.MinValue))
+                    else if (arg.Equals(short.MinValue))
                         display = "short.MinValue";
                 }
-                else if (arg is ushort us)
+                else if (arg is ushort)
                 {
-                    if (us.Equals(ushort.MaxValue))
+                    if (arg.Equals(ushort.MaxValue))
                         display = "ushort.MaxValue";
-                    else if (us.Equals(ushort.MinValue))
+                    else if (arg.Equals(ushort.MinValue))
                         display = "ushort.MinValue";
                 }
-                else if (arg is byte b)
+                else if (arg is byte)
                 {
-                    if (b.Equals(byte.MaxValue))
+                    if (arg.Equals(byte.MaxValue))
                         display = "byte.MaxValue";
-                    else if (b.Equals(byte.MinValue))
+                    else if (arg.Equals(byte.MinValue))
                         display = "byte.MinValue";
                 }
-                else if (arg is sbyte sb)
+                else if (arg is sbyte)
                 {
-                    if (sb.Equals(sbyte.MaxValue))
+                    if (arg.Equals(sbyte.MaxValue))
                         display = "sbyte.MaxValue";
-                    else if (sb.Equals(sbyte.MinValue))
+                    else if (arg.Equals(sbyte.MinValue))
                         display = "sbyte.MinValue";
                 }
 
@@ -447,7 +455,7 @@ namespace NUnit.Framework.Internal
             }
         }
 
-        private sealed class TestIDFragment : NameFragment
+        private class TestIDFragment : NameFragment
         {
             public override string GetText(MethodInfo method, object[] args)
             {
@@ -460,7 +468,7 @@ namespace NUnit.Framework.Internal
             }
         }
 
-        private sealed class FixedTextFragment : NameFragment
+        private class FixedTextFragment : NameFragment
         {
             private readonly string _text;
 
@@ -475,7 +483,7 @@ namespace NUnit.Framework.Internal
             }
         }
 
-        private sealed class MethodNameFragment : NameFragment
+        private class MethodNameFragment : NameFragment
         {
             public override string GetText(MethodInfo method, object[] args)
             {
@@ -490,7 +498,7 @@ namespace NUnit.Framework.Internal
             }
         }
 
-        private sealed class NamespaceFragment : NameFragment
+        private class NamespaceFragment : NameFragment
         {
             public override string GetText(MethodInfo method, object[] args)
             {
@@ -498,7 +506,7 @@ namespace NUnit.Framework.Internal
             }
         }
 
-        private sealed class MethodFullNameFragment : NameFragment
+        private class MethodFullNameFragment : NameFragment
         {
             public override string GetText(MethodInfo method, object[] args)
             {
@@ -515,7 +523,7 @@ namespace NUnit.Framework.Internal
             }
         }
 
-        private sealed class ClassNameFragment : NameFragment
+        private class ClassNameFragment : NameFragment
         {
             public override string GetText(MethodInfo method, object[] args)
             {
@@ -523,7 +531,7 @@ namespace NUnit.Framework.Internal
             }
         }
 
-        private sealed class ClassFullNameFragment : NameFragment
+        private class ClassFullNameFragment : NameFragment
         {
             public override string GetText(MethodInfo method, object[] args)
             {
@@ -531,7 +539,7 @@ namespace NUnit.Framework.Internal
             }
         }
 
-        private sealed class ArgListFragment : NameFragment
+        private class ArgListFragment : NameFragment
         {
             private readonly int _maxStringLength;
 
@@ -561,7 +569,7 @@ namespace NUnit.Framework.Internal
             }
         }
 
-        private sealed class ArgumentFragment : NameFragment
+        private class ArgumentFragment : NameFragment
         {
             private readonly int _index;
             private readonly int _maxStringLength;
@@ -580,7 +588,7 @@ namespace NUnit.Framework.Internal
             }
         }
 
-        private sealed class ParamArgListFragment : NameFragment
+        private class ParamArgListFragment : NameFragment
         {
             private readonly int _maxStringLength;
 
@@ -620,5 +628,4 @@ namespace NUnit.Framework.Internal
 
         #endregion
     }
-
 }
