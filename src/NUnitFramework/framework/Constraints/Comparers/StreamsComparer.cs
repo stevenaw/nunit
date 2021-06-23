@@ -42,11 +42,8 @@ namespace NUnit.Framework.Constraints.Comparers
 
         public bool? Equal(object x, object y, ref Tolerance tolerance, ComparisonState state)
         {
-            if (!(x is Stream) || !(y is Stream))
+            if (!(x is Stream xStream) || !(y is Stream yStream))
                 return null;
-
-            Stream xStream = (Stream)x;
-            Stream yStream = (Stream)y;
 
             if (xStream == yStream) return true;
 
@@ -77,15 +74,14 @@ namespace NUnit.Framework.Constraints.Comparers
 
                 for (long readByte = 0; readByte < xStream.Length; readByte += BUFFER_SIZE)
                 {
-                    var expectedBytes = binaryReaderExpected.Read(bufferExpected, 0, BUFFER_SIZE);
-                    var actualBytes = binaryReaderActual.Read(bufferActual, 0, BUFFER_SIZE);
+                    binaryReaderExpected.Read(bufferExpected, 0, BUFFER_SIZE);
+                    binaryReaderActual.Read(bufferActual, 0, BUFFER_SIZE);
 
 #if !(NET35 || NET40)
                     if (MemoryExtensions.SequenceEqual(bufferExpected.AsSpan(), bufferActual))
                         continue;
 #endif
-                    var maxBytesToCheck = Math.Max(expectedBytes, actualBytes);
-                    for (int count = 0; count < maxBytesToCheck; ++count)
+                    for (int count = 0; count < BUFFER_SIZE; ++count)
                     {
                         if (bufferExpected[count] != bufferActual[count])
                         {

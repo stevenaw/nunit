@@ -98,63 +98,6 @@ namespace NUnit.Framework.Assertions
             }
         }
 
-        private class FakeArbitraryLengthReadOnlyStream : Stream
-        {
-            public FakeArbitraryLengthReadOnlyStream(long length)
-            {
-                Length = length;
-            }
-
-            public override bool CanRead => true;
-
-            public override bool CanSeek => true;
-
-            public override bool CanWrite => false;
-
-            public override long Length { get; }
-
-            public override long Position { get; set; }
-
-            public override void Flush()
-            {
-                throw new NotSupportedException();
-            }
-
-            public override int Read(byte[] buffer, int offset, int count)
-            {
-                var maxRead = Math.Min(Position + count, Length);
-                var b = new byte[maxRead];
-
-                var rand = new Random((int)Position + offset);
-                rand.NextBytes(b);
-
-                b.CopyTo(buffer, 0);
-                return b.Length;
-            }
-
-            public override long Seek(long offset, SeekOrigin origin)
-            {
-                if (origin == SeekOrigin.Begin)
-                    Position = offset;
-                else if (origin == SeekOrigin.End)
-                    Position = -offset;
-                else if (origin == SeekOrigin.Current)
-                    Position += offset;
-
-                return Position;
-            }
-
-            public override void SetLength(long value)
-            {
-                throw new NotImplementedException();
-            }
-
-            public override void Write(byte[] buffer, int offset, int count)
-            {
-                throw new NotSupportedException();
-            }
-        }
-
         [Test]
         public void AreEqualPassesWithFiles()
         {
