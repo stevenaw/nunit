@@ -24,6 +24,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework.Internal.Extensions;
 
 namespace NUnit.Framework.Constraints
@@ -78,7 +79,7 @@ namespace NUnit.Framework.Constraints
             }
         }
 
-        private readonly ArrayList _missingItems = new ArrayList();
+        private readonly List<object> _missingItems = new List<object>();
 
         private readonly List<object> _extraItems = new List<object>();
 
@@ -94,7 +95,7 @@ namespace NUnit.Framework.Constraints
 
             if (c.IsSortable())
             {
-                _isSortable = TrySort(ref _missingItems);
+                _isSortable = TrySort(_missingItems);
             }
         }
 
@@ -104,9 +105,8 @@ namespace NUnit.Framework.Constraints
             return comparer.AreEqual(expected, actual, ref tolerance);
         }
 
-        private static bool TrySort(ref ArrayList items)
+        private static bool TrySort(List<object> items)
         {
-            var original = (ArrayList)items.Clone();
             try
             {
                 items.Sort();
@@ -114,7 +114,6 @@ namespace NUnit.Framework.Constraints
             }
             catch (InvalidOperationException e) when (e.InnerException is ArgumentException ae && ae.Message.Contains(nameof(IComparable)))
             {
-                items = original;
                 return false;
             }
         }
@@ -141,11 +140,11 @@ namespace NUnit.Framework.Constraints
         {
             if (_isSortable && c.IsSortable())
             {
-                var remove = new ArrayList();
+                var remove = new List<object>();
                 foreach (object o in c)
                     remove.Add(o);
 
-                if (TrySort(ref remove))
+                if (TrySort(remove))
                 {
                     _sorted = true;
 
