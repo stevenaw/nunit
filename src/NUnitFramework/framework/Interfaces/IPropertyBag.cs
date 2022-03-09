@@ -102,7 +102,7 @@ namespace NUnit.Framework.Interfaces
         /// </summary>
         /// <param name="key">The key to retrieve values for</param>
         /// <param name="value">The value at the specified key</param>
-        bool TryGetSingleValue(string key, [MaybeNullWhen(false)] out object value);
+        bool TryGetSingleValue<T>(string key, [MaybeNullWhen(false)] out T value);
 
         /// <summary>
         /// Gets or sets the list of values for a particular key

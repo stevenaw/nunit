@@ -125,8 +125,8 @@ namespace NUnit.Framework.Api
         {
             Settings = settings;
 
-            if (settings.ContainsKey(FrameworkPackageSettings.RandomSeed))
-                Randomizer.InitialSeed = (int)settings[FrameworkPackageSettings.RandomSeed];
+            if (settings.TryGetValue(FrameworkPackageSettings.RandomSeed, out var seed))
+                Randomizer.InitialSeed = (int)seed;
 
             WrapInNUnitCallContext(() => LoadedTest = _builder.Build(assemblyNameOrPath, settings));
             return LoadedTest;
@@ -143,8 +143,8 @@ namespace NUnit.Framework.Api
         {
             Settings = settings;
 
-            if (settings.ContainsKey(FrameworkPackageSettings.RandomSeed))
-                Randomizer.InitialSeed = (int)settings[FrameworkPackageSettings.RandomSeed];
+            if (settings.TryGetValue(FrameworkPackageSettings.RandomSeed, out var seed))
+                Randomizer.InitialSeed = (int)seed;
 
             WrapInNUnitCallContext(() => LoadedTest = _builder.Build(assembly, settings));
             return LoadedTest;
@@ -272,8 +272,7 @@ namespace NUnit.Framework.Api
             }
 
             if (!System.Diagnostics.Debugger.IsAttached &&
-                Settings.ContainsKey(FrameworkPackageSettings.DebugTests) &&
-                (bool)Settings[FrameworkPackageSettings.DebugTests])
+                Settings.TryGetValue(FrameworkPackageSettings.DebugTests, out var debug) && (bool)debug)
             {
                 try
                 {
@@ -293,8 +292,8 @@ namespace NUnit.Framework.Api
             }
 
 #if NETFRAMEWORK
-            if (Settings.ContainsKey(FrameworkPackageSettings.PauseBeforeRun) &&
-                (bool)Settings[FrameworkPackageSettings.PauseBeforeRun])
+            if (Settings.TryGetValue(FrameworkPackageSettings.PauseBeforeRun, out var pauseBeforeRun) &&
+                (bool)pauseBeforeRun)
                 PauseBeforeRun();
 #endif
 
@@ -310,14 +309,14 @@ namespace NUnit.Framework.Api
             Context = new TestExecutionContext();
 
             // Apply package settings to the context
-            if (Settings.ContainsKey(FrameworkPackageSettings.DefaultTimeout))
-                Context.TestCaseTimeout = (int)Settings[FrameworkPackageSettings.DefaultTimeout];
-            if (Settings.ContainsKey(FrameworkPackageSettings.DefaultCulture))
-                Context.CurrentCulture = new CultureInfo((string)Settings[FrameworkPackageSettings.DefaultCulture], false);
-            if (Settings.ContainsKey(FrameworkPackageSettings.DefaultUICulture))
-                Context.CurrentUICulture = new CultureInfo((string)Settings[FrameworkPackageSettings.DefaultUICulture], false);
-            if (Settings.ContainsKey(FrameworkPackageSettings.StopOnError))
-                Context.StopOnError = (bool)Settings[FrameworkPackageSettings.StopOnError];
+            if (Settings.TryGetValue(FrameworkPackageSettings.DefaultTimeout, out var timeout))
+                Context.TestCaseTimeout = (int)timeout;
+            if (Settings.TryGetValue(FrameworkPackageSettings.DefaultCulture, out var culture))
+                Context.CurrentCulture = new CultureInfo((string)culture, false);
+            if (Settings.TryGetValue(FrameworkPackageSettings.DefaultUICulture, out var uiCulture))
+                Context.CurrentUICulture = new CultureInfo((string)uiCulture, false);
+            if (Settings.TryGetValue(FrameworkPackageSettings.StopOnError, out var stopOnError))
+                Context.StopOnError = (bool)stopOnError;
 
             // Apply attributes to the context
 
@@ -367,8 +366,8 @@ namespace NUnit.Framework.Api
             if (Settings.TryGetValue(FrameworkPackageSettings.NumberOfTestWorkers, out var workerCount))
                 return (int)workerCount;
 
-            if (LoadedTest.Properties.TryGetSingleValue(PropertyNames.LevelOfParallelism, out var lop))
-                return (int)lop;
+            if (LoadedTest.Properties.TryGetSingleValue<int>(PropertyNames.LevelOfParallelism, out var levelOfParallelism))
+                return levelOfParallelism;
 
             return DefaultLevelOfParallelism;
         }

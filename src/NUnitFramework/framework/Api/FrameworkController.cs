@@ -114,16 +114,16 @@ namespace NUnit.Framework.Api
             var newSettings = settings as IDictionary<string, object>;
             Settings = newSettings ?? settings.Cast<DictionaryEntry>().ToDictionary(de => (string)de.Key, de => de.Value);
 
-            if (Settings.ContainsKey(FrameworkPackageSettings.InternalTraceLevel))
+            if (Settings.TryGetValue(FrameworkPackageSettings.InternalTraceLevel, out var traceLevelSetting))
             {
-                var traceLevel = (InternalTraceLevel)Enum.Parse(typeof(InternalTraceLevel), (string)Settings[FrameworkPackageSettings.InternalTraceLevel], true);
+                var traceLevel = (InternalTraceLevel)Enum.Parse(typeof(InternalTraceLevel), (string)traceLevelSetting, true);
 
-                if (Settings.ContainsKey(FrameworkPackageSettings.InternalTraceWriter))
-                    InternalTrace.Initialize((TextWriter)Settings[FrameworkPackageSettings.InternalTraceWriter], traceLevel);
+                if (Settings.TryGetValue(FrameworkPackageSettings.InternalTraceWriter, out var traceWriter))
+                    InternalTrace.Initialize((TextWriter)traceWriter, traceLevel);
                 else
                 {
-                    var workDirectory = Settings.ContainsKey(FrameworkPackageSettings.WorkDirectory)
-                        ? (string)Settings[FrameworkPackageSettings.WorkDirectory]
+                    var workDirectory = Settings.TryGetValue(FrameworkPackageSettings.WorkDirectory, out var dirValue)
+                        ? (string)dirValue
                         : Directory.GetCurrentDirectory();
                     var id = Process.GetCurrentProcess().Id;
                     var logName = string.Format(LOG_FILE_FORMAT, id, Path.GetFileName(assemblyNameOrPath));

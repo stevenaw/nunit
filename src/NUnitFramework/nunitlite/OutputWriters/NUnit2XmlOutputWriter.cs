@@ -172,8 +172,8 @@ namespace NUnitLite
                 xmlWriter.WriteAttributeString("name", result.Name);
             }
 
-            if (test.Properties.TryGetSingleValue(PropertyNames.Description, out var description))
-                xmlWriter.WriteAttributeString("description", (string)description);
+            if (test.Properties.TryGetSingleValue<string>(PropertyNames.Description, out var description))
+                xmlWriter.WriteAttributeString("description", description);
 
             TestStatus status = result.ResultState.Status;
             string translatedResult = TranslateResult(result.ResultState);

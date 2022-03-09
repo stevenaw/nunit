@@ -99,11 +99,11 @@ namespace NUnit.Framework.Internal.Execution
                 var xKey = int.MaxValue;
                 var yKey = int.MaxValue;
 
-                if (x.Test.Properties.TryGetSingleValue(PropertyNames.Order, out var xVal))
-                    xKey = (int)xVal;
+                if (x.Test.Properties.TryGetSingleValue<int>(PropertyNames.Order, out var xVal))
+                    xKey = xVal;
 
-                if (y.Test.Properties.TryGetSingleValue(PropertyNames.Order, out var yVal))
-                    yKey = (int)yVal;
+                if (y.Test.Properties.TryGetSingleValue<int>(PropertyNames.Order, out var yVal))
+                    yKey = yVal;
 
                 return xKey.CompareTo(yKey);
             }

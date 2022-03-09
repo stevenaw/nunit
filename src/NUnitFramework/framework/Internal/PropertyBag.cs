@@ -153,16 +153,16 @@ namespace NUnit.Framework.Internal
         /// </summary>
         /// <param name="key">The key to retrieve values for</param>
         /// <param name="value">The value at the specified key</param>
-        public bool TryGetSingleValue(string key, [MaybeNullWhen(false)] out object value)
+        public bool TryGetSingleValue<T>(string key, [MaybeNullWhen(false)] out T value)
         {
-            if (!inner.TryGetValue(key, out var list) || list.Count == 0)
+            if (inner.TryGetValue(key, out var list) && list.Count > 0 && list[0] is T result)
             {
-                value = default;
-                return false;
+                value = result;
+                return true;
             }
 
-            value = list[0];
-            return true;
+            value = default;
+            return false;
         }
 
         #endregion
