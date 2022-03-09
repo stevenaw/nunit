@@ -172,11 +172,8 @@ namespace NUnitLite
                 xmlWriter.WriteAttributeString("name", result.Name);
             }
 
-            if (test.Properties.ContainsKey(PropertyNames.Description))
-            {
-                string description = (string)test.Properties.Get(PropertyNames.Description);
-                xmlWriter.WriteAttributeString("description", description);
-            }
+            if (test.Properties.TryGetSingleValue(PropertyNames.Description, out var description))
+                xmlWriter.WriteAttributeString("description", (string)description);
 
             TestStatus status = result.ResultState.Status;
             string translatedResult = TranslateResult(result.ResultState);

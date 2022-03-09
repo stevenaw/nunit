@@ -41,8 +41,8 @@ namespace NUnit.Framework.Internal.Execution
             Result = test.MakeTestResult();
             State = WorkItemState.Ready;
 
-            ParallelScope = Test.Properties.ContainsKey(PropertyNames.ParallelScope)
-                ? (ParallelScope)Test.Properties.Get(PropertyNames.ParallelScope)
+            ParallelScope = Test.Properties.TryGetSingleValue(PropertyNames.ParallelScope, out var propValue)
+                ? (ParallelScope)propValue
                 : ParallelScope.Default;
 
             TargetApartment = GetTargetApartment(Test);
@@ -512,8 +512,8 @@ namespace NUnit.Framework.Internal.Execution
         /// </summary>
         static ApartmentState GetTargetApartment(ITest test)
         {
-            var apartment = test.Properties.ContainsKey(PropertyNames.ApartmentState)
-                ? (ApartmentState)test.Properties.Get(PropertyNames.ApartmentState)
+            var apartment = test.Properties.TryGetSingleValue(PropertyNames.ApartmentState, out var propValue)
+                ? (ApartmentState)propValue
                 : ApartmentState.Unknown;
 
             if (apartment == ApartmentState.Unknown && test.Parent != null)

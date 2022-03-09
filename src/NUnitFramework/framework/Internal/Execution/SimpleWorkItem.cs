@@ -144,8 +144,8 @@ namespace NUnit.Framework.Internal.Execution
                 int timeout = Context.TestCaseTimeout;
 
                 // Timeout set on this test
-                if (Test.Properties.ContainsKey(PropertyNames.Timeout))
-                    timeout = (int)Test.Properties.Get(PropertyNames.Timeout);
+                if (Test.Properties.TryGetSingleValue(PropertyNames.Timeout, out var value))
+                    timeout = (int)value;
 
                 if (timeout > 0)
                     command = new TimeoutCommand(command, timeout, _debugger);

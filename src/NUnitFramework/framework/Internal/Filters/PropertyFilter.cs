@@ -1,4 +1,4 @@
-﻿// Copyright (c) Charlie Poole, Rob Prouse and Contributors. MIT License - see LICENSE.txt
+// Copyright (c) Charlie Poole, Rob Prouse and Contributors. MIT License - see LICENSE.txt
 
 using System;
 using System.Collections;
@@ -33,12 +33,14 @@ namespace NUnit.Framework.Internal.Filters
         /// <returns></returns>
         public override bool Match(ITest test)
         {
-            IList values = test.Properties[_propertyName];
-
-            if (values != null)
+            if (test.Properties.TryGetValue(_propertyName, out var values))
+            {
                 foreach (string val in values)
+                {
                     if (Match(val))
                         return true;
+                }
+            }
 
             return false;
         }

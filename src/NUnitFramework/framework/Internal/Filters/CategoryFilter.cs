@@ -27,12 +27,14 @@ namespace NUnit.Framework.Internal.Filters
         /// <returns></returns>
         public override bool Match(ITest test)
         {
-            IList testCategories = test.Properties[PropertyNames.Category];
-
-            if ( testCategories != null)
+            if (test.Properties.TryGetValue(PropertyNames.Category, out var testCategories))
+            {
                 foreach (string cat in testCategories)
-                    if ( Match(cat))
+                {
+                    if (Match(cat))
                         return true;
+                }
+            }
 
             return false;
         }

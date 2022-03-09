@@ -2,8 +2,8 @@
 
 #nullable enable
 
-using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using NUnit.Framework.Interfaces;
 
 namespace NUnit.Framework.Internal
@@ -18,18 +18,18 @@ namespace NUnit.Framework.Internal
     /// </summary>
     public class PropertyBag : IPropertyBag
     {
-        private readonly Dictionary<string, IList> inner = new Dictionary<string, IList>();
+        private readonly Dictionary<string, IList<object>> inner = new Dictionary<string, IList<object>>();
 
         #region IPropertyBagMembers
 
         /// <summary>
-        /// Adds a key/value pair to the property set
+        /// Adds a key/value pair to the property set.
         /// </summary>
         /// <param name="key">The key</param>
         /// <param name="value">The value</param>
         public void Add(string key, object value)
         {
-            Guard.ArgumentNotNull(value, "value");
+            Guard.ArgumentNotNull(value, nameof(value));
 
             if (!inner.TryGetValue(key, out var list))
             {
@@ -37,6 +37,34 @@ namespace NUnit.Framework.Internal
                 inner.Add(key, list);
             }
             list.Add(value);
+        }
+
+        /// <summary>
+        /// Adds a key and set of values to the property bag.
+        /// </summary>
+        /// <param name="key">The key</param>
+        /// <param name="values">The values to add</param>
+        public void AddRange(string key, IList<object> values)
+        {
+            Guard.ArgumentNotNull(key, nameof(key));
+            Guard.ArgumentNotNull(values, nameof(values));
+
+            if (inner.TryGetValue(key, out var existing))
+                ((List<object>)existing).AddRange(values);
+            else
+                inner.Add(key, new List<object>(values));
+        }
+
+        /// <summary>
+        /// Copies the contents to another instance.
+        /// </summary>
+        /// <param name="other">The instance to copy to</param>
+        public void CopyTo(IPropertyBag other)
+        {
+            Guard.ArgumentNotNull(other, nameof(other));
+
+            foreach (var kvp in inner)
+                other.AddRange(kvp.Key, kvp.Value);
         }
 
         /// <summary>
@@ -51,7 +79,7 @@ namespace NUnit.Framework.Internal
             Guard.ArgumentNotNull(key, nameof(key));
             Guard.ArgumentNotNull(value, nameof(value));
 
-            IList list = new List<object>();
+            var list = new List<object>();
             list.Add(value);
             inner[key] = list;
         }
@@ -95,7 +123,7 @@ namespace NUnit.Framework.Internal
         /// <summary>
         /// Gets or sets the list of values for a particular key
         /// </summary>
-        public IList this[string key]
+        public IList<object> this[string key]
         {
             get
             {
@@ -110,6 +138,31 @@ namespace NUnit.Framework.Internal
             {
                 inner[key] = value;
             }
+        }
+
+        /// <summary>
+        /// Gets or sets the list of values for a particular key
+        /// </summary>
+        public bool TryGetValue(string key, out IList<object> value)
+        {
+            return inner.TryGetValue(key, out value);
+        }
+
+        /// <summary>
+        /// Tries to get the first value at the specified key.
+        /// </summary>
+        /// <param name="key">The key to retrieve values for</param>
+        /// <param name="value">The value at the specified key</param>
+        public bool TryGetSingleValue(string key, [MaybeNullWhen(false)] out object value)
+        {
+            if (!inner.TryGetValue(key, out var list) || list.Count == 0)
+            {
+                value = default;
+                return false;
+            }
+
+            value = list[0];
+            return true;
         }
 
         #endregion
@@ -137,14 +190,14 @@ namespace NUnit.Framework.Internal
         {
             TNode properties = parentNode.AddElement("properties");
 
-            foreach (string key in Keys)
+            foreach (var key in Keys)
             {
                 foreach (object value in this[key])
                 {
                     TNode prop = properties.AddElement("property");
 
                     // TODO: Format as string
-                    prop.AddAttribute("name", key.ToString());
+                    prop.AddAttribute("name", key);
                     prop.AddAttribute("value", value.ToString());
                 }
             }

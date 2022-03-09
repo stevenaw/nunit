@@ -59,9 +59,7 @@ namespace NUnit.Framework.Internal
             : this(data.RunState, data.Arguments)
         {
             TestName = data.TestName;
-
-            foreach (string key in data.Properties.Keys)
-                this.Properties[key] = data.Properties[key];
+            data.Properties.CopyTo(this.Properties);
         }
 
         private TestParameters(RunState runState, object?[] args)
@@ -123,9 +121,7 @@ namespace NUnit.Framework.Internal
             if (this.RunState != RunState.Runnable)
                 test.RunState = this.RunState;
 
-            foreach (string key in Properties.Keys)
-                foreach (object value in Properties[key])
-                    test.Properties.Add(key, value);
+            Properties.CopyTo(test.Properties);
         }
 
         /// <summary>

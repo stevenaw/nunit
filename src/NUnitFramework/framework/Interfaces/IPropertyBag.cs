@@ -2,8 +2,8 @@
 
 #nullable enable
 
-using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace NUnit.Framework.Interfaces
 {
@@ -47,13 +47,19 @@ namespace NUnit.Framework.Interfaces
     public interface IPropertyBag : IXmlNodeBuilder
     {
         /// <summary>
-        /// Adds a key/value pair to the property bag
+        /// Adds a key/value pair to the property bag.
         /// </summary>
         /// <param name="key">The key</param>
         /// <param name="value">The value</param>
         void Add(string key, object value);
 
-        
+        /// <summary>
+        /// Adds a key and set of values to the property bag.
+        /// </summary>
+        /// <param name="key">The key</param>
+        /// <param name="values">The values to add</param>
+        public void AddRange(string key, IList<object> values);
+
         /// <summary>
         /// Sets the value for a key, removing any other
         /// values that are already in the property set.
@@ -67,6 +73,7 @@ namespace NUnit.Framework.Interfaces
         /// one if multiple values are present and returning
         /// null if the value is not found.
         /// </summary>
+        /// <param name="key"></param>
         object? Get(string key);
 
         /// <summary>
@@ -78,10 +85,30 @@ namespace NUnit.Framework.Interfaces
         bool ContainsKey(string key);
 
         /// <summary>
+        /// Copies the contents to another instance.
+        /// </summary>
+        /// <param name="other">The instance to copy to</param>
+        void CopyTo(IPropertyBag other);
+
+        /// <summary>
+        /// Tries to get the value at the specified key.
+        /// </summary>
+        /// <param name="key">The key to retrieve values for</param>
+        /// <param name="value">The value at the specified key</param>
+        bool TryGetValue(string key, out IList<object> value);
+
+        /// <summary>
+        /// Tries to get the first value at the specified key.
+        /// </summary>
+        /// <param name="key">The key to retrieve values for</param>
+        /// <param name="value">The value at the specified key</param>
+        bool TryGetSingleValue(string key, [MaybeNullWhen(false)] out object value);
+
+        /// <summary>
         /// Gets or sets the list of values for a particular key
         /// </summary>
         /// <param name="key">The key for which the values are to be retrieved or set</param>
-        IList this[string key] { get; set; }
+        IList<object> this[string key] { get; set; }
 
         /// <summary>
         /// Gets a collection containing all the keys in the property set

@@ -84,9 +84,7 @@ namespace NUnit.Framework
         /// <param name="test">The test to modify</param>
         public virtual void ApplyToTest(Test test)
         {
-            foreach (string key in Properties.Keys)
-                foreach(object value in Properties[key])
-                    test.Properties.Add(key, value);
+            Properties.CopyTo(test.Properties);
         }
 
         #endregion

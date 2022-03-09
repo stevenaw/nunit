@@ -273,7 +273,7 @@ namespace NUnit.Framework.Attributes
         {
             Test test = (Test)TestBuilder.MakeParameterizedMethodSuite(
                 typeof(TestCaseAttributeFixture), nameof(TestCaseAttributeFixture.MethodHasSingleCategory)).Tests[0];
-            IList categories = test.Properties["Category"];
+            var categories = test.Properties["Category"];
             Assert.AreEqual(new string[] { "XYZ" }, categories);
         }
 
@@ -282,7 +282,7 @@ namespace NUnit.Framework.Attributes
         {
             Test test = (Test)TestBuilder.MakeParameterizedMethodSuite(
                 typeof(TestCaseAttributeFixture), nameof(TestCaseAttributeFixture.MethodHasMultipleCategories)).Tests[0];
-            IList categories = test.Properties["Category"];
+            var categories = test.Properties["Category"];
             Assert.AreEqual(new string[] { "X", "Y", "Z" }, categories);
         }
 

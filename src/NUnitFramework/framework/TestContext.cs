@@ -556,13 +556,7 @@ namespace NUnit.Framework
             {
                 get
                 {
-                    var list = new List<object>();
-                    foreach(var item in _source[key])
-                    {
-                        list.Add(item);
-                    }
-
-                    return list;
+                    return new List<object>(_source[key]);
                 }
             }
 

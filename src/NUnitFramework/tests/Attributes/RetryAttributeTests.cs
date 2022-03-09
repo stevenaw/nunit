@@ -75,7 +75,7 @@ namespace NUnit.Framework.Attributes
         {
             TestSuite suite = TestBuilder.MakeFixture(typeof(RetryTestWithCategoryFixture));
             Test test = suite.Tests[0] as Test;
-            System.Collections.IList categories = test.Properties["Category"];
+            var categories = test.Properties["Category"];
             Assert.IsNotNull(categories);
             Assert.AreEqual(1, categories.Count);
             Assert.AreEqual("SAMPLE", categories[0]);

@@ -326,8 +326,7 @@ namespace NUnit.Framework.Api
 
             int levelOfParallelism = GetLevelOfParallelism();
 
-            if (Settings.ContainsKey(FrameworkPackageSettings.RunOnMainThread) &&
-                (bool)Settings[FrameworkPackageSettings.RunOnMainThread])
+            if (Settings.TryGetValue(FrameworkPackageSettings.RunOnMainThread, out var romt) && (bool)romt)
                 Context.Dispatcher = new MainThreadWorkItemDispatcher();
             else if (levelOfParallelism > 0)
                 Context.Dispatcher = new ParallelWorkItemDispatcher(levelOfParallelism);
@@ -365,11 +364,13 @@ namespace NUnit.Framework.Api
 
         private int GetLevelOfParallelism()
         {
-            return Settings.ContainsKey(FrameworkPackageSettings.NumberOfTestWorkers)
-                ? (int)Settings[FrameworkPackageSettings.NumberOfTestWorkers]
-                : (LoadedTest.Properties.ContainsKey(PropertyNames.LevelOfParallelism)
-                   ? (int)LoadedTest.Properties.Get(PropertyNames.LevelOfParallelism)
-                   : NUnitTestAssemblyRunner.DefaultLevelOfParallelism);
+            if (Settings.TryGetValue(FrameworkPackageSettings.NumberOfTestWorkers, out var workerCount))
+                return (int)workerCount;
+
+            if (LoadedTest.Properties.TryGetSingleValue(PropertyNames.LevelOfParallelism, out var lop))
+                return (int)lop;
+
+            return DefaultLevelOfParallelism;
         }
 
 #if NETFRAMEWORK

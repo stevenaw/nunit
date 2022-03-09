@@ -143,9 +143,7 @@ namespace NUnit.Framework.Internal.Builders
             if (fixture.RunState != RunState.NotRunnable)
                 fixture.RunState = testFixtureData.RunState;
 
-            foreach (string key in testFixtureData.Properties.Keys)
-                foreach (object val in testFixtureData.Properties[key])
-                    fixture.Properties.Add(key, val);
+            testFixtureData.Properties.CopyTo(fixture.Properties);
 
             if (fixture.RunState != RunState.NotRunnable)
                 CheckTestFixtureIsValid(fixture);

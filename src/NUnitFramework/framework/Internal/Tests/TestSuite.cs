@@ -87,9 +87,7 @@ namespace NUnit.Framework.Internal
             this.RunState = suite.RunState;
             this.Fixture  = suite.Fixture;
 
-            foreach (string key in suite.Properties.Keys)
-            foreach (object val in suite.Properties[key])
-                this.Properties.Add(key, val);
+            suite.Properties.CopyTo(this.Properties);
 
             foreach (var child in suite.tests)
             {
