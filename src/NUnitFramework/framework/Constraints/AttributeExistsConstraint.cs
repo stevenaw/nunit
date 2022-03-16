@@ -1,6 +1,5 @@
 // Copyright (c) Charlie Poole, Rob Prouse and Contributors. MIT License - see LICENSE.txt
 using System;
-using System.Reflection;
 using NUnit.Compatibility;
 
 namespace NUnit.Framework.Constraints
@@ -9,23 +8,12 @@ namespace NUnit.Framework.Constraints
     /// AttributeExistsConstraint tests for the presence of a
     /// specified attribute on a Type.
     /// </summary>
-    public class AttributeExistsConstraint : Constraint
+    public class AttributeExistsConstraint<TExpected> : Constraint where TExpected : Attribute
     {
-        private readonly Type expectedType;
-
         /// <summary>
         /// Constructs an AttributeExistsConstraint for a specific attribute Type
         /// </summary>
-        /// <param name="type"></param>
-        public AttributeExistsConstraint(Type type)
-            : base(type)
-        {
-            this.expectedType = type;
-
-            if (!typeof(Attribute).GetTypeInfo().IsAssignableFrom(expectedType.GetTypeInfo()))
-                throw new ArgumentException(string.Format(
-                    "Type {0} is not an attribute", expectedType), nameof(type));
-        }
+        public AttributeExistsConstraint() : base(typeof(TExpected)) { }
 
         /// <summary>
         /// The Description of what this constraint tests, for
@@ -33,7 +21,7 @@ namespace NUnit.Framework.Constraints
         /// </summary>
         public override string Description
         {
-            get { return "type with attribute " + MsgUtils.FormatValue(expectedType); }
+            get { return "type with attribute " + MsgUtils.FormatValue(typeof(TExpected)); }
         }
 
         /// <summary>
@@ -44,11 +32,42 @@ namespace NUnit.Framework.Constraints
         public override ConstraintResult ApplyTo<TActual>(TActual actual)
         {
             Guard.ArgumentNotNull(actual, nameof(actual));
-            Attribute[] attrs = AttributeHelper.GetCustomAttributes(actual, expectedType, true);
-            ConstraintResult result = new ConstraintResult(this, actual);
-            result.Status = attrs.Length > 0
-                ? ConstraintStatus.Success : ConstraintStatus.Failure;
-            return result;
+
+            var attrs = AttributeHelper.GetCustomAttributes<TExpected>(actual);
+
+            return new ConstraintResult(this, actual, attrs.Length > 0);
         }
+    }
+
+    /// <summary>
+    /// AttributeExistsConstraint tests for the presence of a
+    /// specified attribute on a Type.
+    /// </summary>
+    public class AttributeExistsConstraint : Constraint
+    {
+        private readonly Constraint _inner;
+
+        /// <summary>
+        /// Constructs an AttributeExistsConstraint for a specific attribute Type
+        /// </summary>
+        /// <param name="type"></param>
+        public AttributeExistsConstraint(Type type)
+        {
+            _inner = AttributeHelper.MakeGenericForAttribute<Constraint>(type, typeof(AttributeExistsConstraint));
+        }
+
+        /// <summary>
+        /// The Description of what this constraint tests, for
+        /// use in messages and in the ConstraintResult.
+        /// </summary>
+        public override string Description => _inner.Description;
+
+        /// <summary>
+        /// Tests whether the object provides the expected attribute.
+        /// </summary>
+        /// <param name="actual">A Type, MethodInfo, or other ICustomAttributeProvider</param>
+        /// <returns>True if the expected attribute is present, otherwise false</returns>
+        public override ConstraintResult ApplyTo<TActual>(TActual actual)
+            => _inner.ApplyTo(actual);
     }
 }

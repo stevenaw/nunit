@@ -10,7 +10,7 @@ namespace NUnit.Framework.Constraints
         [SetUp]
         public void SetUp()
         {
-            TheConstraint = new AttributeExistsConstraint(typeof(TestFixtureAttribute));
+            TheConstraint = new AttributeExistsConstraint<TestFixtureAttribute>();
             ExpectedDescription = "type with attribute <NUnit.Framework.TestFixtureAttribute>";
             StringRepresentation = "<attributeexists NUnit.Framework.TestFixtureAttribute>";
         }
@@ -30,15 +30,15 @@ namespace NUnit.Framework.Constraints
         public void AttributeExistsOnMethodInfo()
         {
             Assert.That(
-                GetType().GetMethod("AttributeExistsOnMethodInfo"),
-                new AttributeExistsConstraint(typeof(TestAttribute)));
+                GetType().GetMethod(nameof(AttributeExistsOnMethodInfo)),
+                new AttributeExistsConstraint<TestAttribute>());
         }
 
         [Test, Description("my description")]
         public void AttributeTestPropertyValueOnMethodInfo()
         {
             Assert.That(
-                GetType().GetMethod("AttributeTestPropertyValueOnMethodInfo"),
+                GetType().GetMethod(nameof(AttributeTestPropertyValueOnMethodInfo)),
                 Has.Attribute(typeof(DescriptionAttribute)).Property("Properties").Property("Keys").Contains("Description"));
         }
 

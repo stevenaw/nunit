@@ -289,9 +289,9 @@ namespace NUnit.Framework.Constraints
         /// Returns a new AttributeConstraint checking for the
         /// presence of a particular attribute on an object.
         /// </summary>
-        public ResolvableConstraintExpression Attribute<TExpected>()
+        public ResolvableConstraintExpression Attribute<TExpected>() where TExpected : Attribute
         {
-            return Attribute(typeof(TExpected));
+            return this.Append(new AttributeOperator<TExpected>());
         }
 
         #endregion

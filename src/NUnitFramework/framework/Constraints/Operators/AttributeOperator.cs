@@ -1,5 +1,6 @@
 // Copyright (c) Charlie Poole, Rob Prouse and Contributors. MIT License - see LICENSE.txt
 using System;
+using NUnit.Compatibility;
 
 namespace NUnit.Framework.Constraints
 {
@@ -7,18 +8,13 @@ namespace NUnit.Framework.Constraints
     /// Operator that tests for the presence of a particular attribute
     /// on a type and optionally applies further tests to the attribute.
     /// </summary>
-    public class AttributeOperator : SelfResolvingOperator
+    public class AttributeOperator<TExpected> : SelfResolvingOperator where TExpected : Attribute
     {
-        private readonly Type type;
-
         /// <summary>
         /// Construct an AttributeOperator for a particular Type
         /// </summary>
-        /// <param name="type">The Type of attribute tested</param>
-        public AttributeOperator(Type type)
+        public AttributeOperator()
         {
-            this.type = type;
-
             // Attribute stacks on anything and allows only 
             // prefix operators to stack on it.
             this.left_precedence = this.right_precedence = 1;
@@ -32,9 +28,36 @@ namespace NUnit.Framework.Constraints
         public override void Reduce(ConstraintBuilder.ConstraintStack stack)
         {
             if (RightContext == null || RightContext is BinaryOperator)
-                stack.Push(new AttributeExistsConstraint(type));
+                stack.Push(new AttributeExistsConstraint<TExpected>());
             else
-                stack.Push(new AttributeConstraint(type, stack.Pop()));
+                stack.Push(new AttributeConstraint<TExpected>(stack.Pop()));
         }
     }
- }
+
+    /// <summary>
+    /// Operator that tests for the presence of a particular attribute
+    /// on a type and optionally applies further tests to the attribute.
+    /// </summary>
+    public class AttributeOperator : SelfResolvingOperator
+    {
+        private readonly SelfResolvingOperator _inner;
+
+        /// <summary>
+        /// Construct an AttributeOperator for a particular Type
+        /// </summary>
+        public AttributeOperator(Type type)
+        {
+            _inner = AttributeHelper.MakeGenericForAttribute<SelfResolvingOperator>(type, typeof(AttributeOperator<>));
+        }
+
+        /// <summary>
+        /// Reduce produces a constraint from the operator and 
+        /// any arguments. It takes the arguments from the constraint 
+        /// stack and pushes the resulting constraint on it.
+        /// </summary>
+        public override void Reduce(ConstraintBuilder.ConstraintStack stack)
+        {
+            _inner.Reduce(stack);
+        }
+    }
+}

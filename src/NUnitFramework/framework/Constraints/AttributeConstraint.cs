@@ -1,6 +1,5 @@
 // Copyright (c) Charlie Poole, Rob Prouse and Contributors. MIT License - see LICENSE.txt
 using System;
-using System.Reflection;
 using NUnit.Compatibility;
 
 namespace NUnit.Framework.Constraints
@@ -10,26 +9,17 @@ namespace NUnit.Framework.Constraints
     /// on a Type or other provider and that the value of the attribute
     /// satisfies some other constraint.
     /// </summary>
-    public class AttributeConstraint : PrefixConstraint
+    public class AttributeConstraint<TExpected> : PrefixConstraint where TExpected : Attribute
     {
-        private readonly Type expectedType;
-        private Attribute attrFound;
-
         /// <summary>
         /// Constructs an AttributeConstraint for a specified attribute
         /// Type and base constraint.
         /// </summary>
-        /// <param name="type"></param>
         /// <param name="baseConstraint"></param>
-        public AttributeConstraint(Type type, IConstraint baseConstraint)
+        public AttributeConstraint(IConstraint baseConstraint)
             : base(baseConstraint)
         {
-            this.expectedType = type;
-            this.DescriptionPrefix = "attribute " + expectedType.FullName;
-
-            if (!typeof(Attribute).GetTypeInfo().IsAssignableFrom(expectedType.GetTypeInfo()))
-                throw new ArgumentException(string.Format(
-                    "Type {0} is not an attribute", expectedType), nameof(type));
+            this.DescriptionPrefix = "attribute " + typeof(TExpected).FullName;
         }
 
         /// <summary>
@@ -40,12 +30,12 @@ namespace NUnit.Framework.Constraints
         public override ConstraintResult ApplyTo<TActual>(TActual actual)
         {
             Guard.ArgumentNotNull(actual, nameof(actual));
-            Attribute[] attrs = AttributeHelper.GetCustomAttributes(actual, expectedType, true);
-            if (attrs.Length == 0)
-                throw new ArgumentException(string.Format("Attribute {0} was not found", expectedType), nameof(actual));
 
-            attrFound = attrs[0];
-            return BaseConstraint.ApplyTo(attrFound);
+            var attrs = AttributeHelper.GetCustomAttributes<TExpected>(actual);
+            if (attrs.Length == 0)
+                throw new ArgumentException($"Attribute {typeof(TExpected)} was not found", nameof(actual));
+
+            return BaseConstraint.ApplyTo(attrs[0]);
         }
 
         /// <summary>
@@ -53,7 +43,7 @@ namespace NUnit.Framework.Constraints
         /// </summary>
         protected override string GetStringRepresentation()
         {
-            return string.Format("<attribute {0} {1}>", expectedType, BaseConstraint);
+            return string.Format("<attribute {0} {1}>", typeof(TExpected), BaseConstraint);
         }
     }
 }

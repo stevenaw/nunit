@@ -156,20 +156,22 @@ namespace NUnit.Framework.Constraints
             foreach (object arg in Arguments)
             {
                 sb.Append(" ");
-                sb.Append(_displayable(arg));
+                sb.Append(FormatForDisplay(arg));
             }
 
             sb.Append(">");
 
             return sb.ToString();
-        }
 
-        private static string _displayable(object o)
-        {
-            if (o == null) return "null";
-
-            string fmt = o is string ? "\"{0}\"" : "{0}";
-            return string.Format(System.Globalization.CultureInfo.InvariantCulture, fmt, o);
+            static string FormatForDisplay(object o)
+            {
+                if (o is null)
+                    return "null";
+                else if (o is string s)
+                    return $"\"{s}\"";
+                else
+                    return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}", o);
+            }
         }
 
         #endregion
