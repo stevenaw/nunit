@@ -19,7 +19,7 @@ namespace NUnit.Framework.Constraints
         public AttributeConstraint(IConstraint baseConstraint)
             : base(baseConstraint)
         {
-            this.DescriptionPrefix = "attribute " + typeof(TExpected).FullName;
+            this.DescriptionPrefix = $"attribute {typeof(TExpected).FullName}";
         }
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace NUnit.Framework.Constraints
         /// </summary>
         protected override string GetStringRepresentation()
         {
-            return string.Format("<attribute {0} {1}>", typeof(TExpected), BaseConstraint);
+            return $"<attribute {typeof(TExpected)} {BaseConstraint}>";
         }
     }
 }

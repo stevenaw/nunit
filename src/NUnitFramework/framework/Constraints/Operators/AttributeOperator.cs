@@ -40,14 +40,19 @@ namespace NUnit.Framework.Constraints
     /// </summary>
     public class AttributeOperator : SelfResolvingOperator
     {
-        private readonly SelfResolvingOperator _inner;
+        private readonly Type type;
 
         /// <summary>
         /// Construct an AttributeOperator for a particular Type
         /// </summary>
+        /// <param name="type">The Type of attribute tested</param>
         public AttributeOperator(Type type)
         {
-            _inner = AttributeHelper.MakeGenericForAttribute<SelfResolvingOperator>(type, typeof(AttributeOperator<>));
+            this.type = type;
+
+            // Attribute stacks on anything and allows only 
+            // prefix operators to stack on it.
+            this.left_precedence = this.right_precedence = 1;
         }
 
         /// <summary>
@@ -57,7 +62,16 @@ namespace NUnit.Framework.Constraints
         /// </summary>
         public override void Reduce(ConstraintBuilder.ConstraintStack stack)
         {
-            _inner.Reduce(stack);
+            if (RightContext == null || RightContext is BinaryOperator)
+                stack.Push(CreateGenericOperator(typeof(AttributeExistsConstraint<>), type));
+            else
+                stack.Push(CreateGenericOperator(typeof(AttributeConstraint<>), type, stack.Pop()));
+        }
+
+        private static IConstraint CreateGenericOperator(Type openGenericType, Type typeArgs, params object[] ctorArgs)
+        {
+            var closedGeneric = openGenericType.MakeGenericType(typeArgs);
+            return Activator.CreateInstance(closedGeneric, ctorArgs) as IConstraint;
         }
     }
 }
