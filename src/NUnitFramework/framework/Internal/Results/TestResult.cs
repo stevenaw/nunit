@@ -6,7 +6,6 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using NUnit.Compatibility;
 using NUnit.Framework.Interfaces;
@@ -45,9 +44,6 @@ namespace NUnit.Framework.Internal
         /// </summary>
         internal const double MIN_DURATION = 0.000001d;
 
-        //        static Logger log = InternalTrace.GetLogger("TestResult");
-
-        private readonly StringBuilder _output = new();
         private double _duration;
 
         /// <summary>
@@ -81,7 +77,7 @@ namespace NUnit.Framework.Internal
             _resultState = ResultState.Inconclusive;
             _message = string.Empty;
 
-            OutWriter = TextWriter.Synchronized(new StringWriter(_output));
+            Writer = new NUnitWriter();
         }
 
         #endregion
@@ -268,24 +264,17 @@ namespace NUnit.Framework.Internal
         /// </summary>
         public abstract IEnumerable<ITestResult> Children { get; }
 
+        internal NUnitWriter Writer;
+
         /// <summary>
         /// Gets a TextWriter, which will write output to be included in the result.
         /// </summary>
-        public TextWriter OutWriter { get; }
+        public TextWriter OutWriter => Writer;
 
         /// <summary>
         /// Gets any text output written to this result.
         /// </summary>
-        public string Output
-        {
-            get
-            {
-                lock (OutWriter)
-                {
-                    return _output.ToString();
-                }
-            }
-        }
+        public string Output => Writer.GetOutput();
 
         /// <summary>
         /// Gets a list of assertion results associated with the test.

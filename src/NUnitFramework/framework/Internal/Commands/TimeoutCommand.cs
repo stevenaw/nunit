@@ -121,7 +121,7 @@ namespace NUnit.Framework.Internal.Commands
         {
             var separateContext = new TestExecutionContext(context)
             {
-                CurrentResult = context.CurrentTest.MakeTestResult()
+                CurrentResult = context.CurrentTest.MakeTestResult(context.OutWriter)
             };
 
             return Task.Run(() => innerCommand.Execute(separateContext));

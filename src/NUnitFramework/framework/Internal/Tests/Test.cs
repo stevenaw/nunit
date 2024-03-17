@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework.Interfaces;
@@ -300,6 +301,13 @@ namespace NUnit.Framework.Internal
         /// </summary>
         /// <returns>A TestResult suitable for this type of test.</returns>
         public abstract TestResult MakeTestResult();
+
+        internal TestResult MakeTestResult(TextWriter writer)
+        {
+            var result = MakeTestResult();
+            result.Writer = (NUnitWriter)writer;
+            return result;
+        }
 
         /// <summary>
         /// Modify a newly constructed test by applying any of NUnit's common
