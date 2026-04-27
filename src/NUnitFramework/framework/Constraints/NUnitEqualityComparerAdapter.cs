@@ -1,7 +1,9 @@
 // Copyright (c) Charlie Poole, Rob Prouse and Contributors. MIT License - see LICENSE.txt
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using NUnit.Framework.Internal.Extensions;
 
 namespace NUnit.Framework.Constraints
 {
@@ -42,6 +44,11 @@ namespace NUnit.Framework.Constraints
         /// <returns>A hash code for the specified object.</returns>
         public int GetHashCode(T? obj)
         {
+            if (obj is ICollection collection)
+            {
+                return HashCode.Combine(collection.Count, _comparer.IsModified);
+            }
+
             return HashCode.Combine(obj, _comparer.IsModified);
         }
     }

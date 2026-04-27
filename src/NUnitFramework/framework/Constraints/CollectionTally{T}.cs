@@ -1,5 +1,6 @@
 // Copyright (c) Charlie Poole, Rob Prouse and Contributors. MIT License - see LICENSE.txt
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -46,7 +47,7 @@ namespace NUnit.Framework.Constraints
             }
         }
 
-        private record struct StrategyKey(bool ContentsArePrimitive, bool ContentsAreSortable, bool FuzzyCompare);
+        private record struct StrategyKey(bool ContentsArePrimitive, bool ContentsAreSortable, bool FuzzyCompare, bool IsCollection);
 
         /// <summary>Construct a CollectionTally object from a collection and a comparer.</summary>
         /// <param name="c">The expected collection to compare against.</param>
@@ -56,9 +57,10 @@ namespace NUnit.Framework.Constraints
             bool contentsArePrimitive = typeof(T).IsPrimitive;
             bool contentsAreSortable = typeof(T) != typeof(object) && (contentsArePrimitive || c.IsSortable());
             bool fuzzyCompare = comparer.IsModified || !(contentsArePrimitive || typeof(T).CanUseDefaultEquality());
+            var isCollection = c is ICollection;
 
+            StrategyKey key = new(contentsArePrimitive, contentsAreSortable, fuzzyCompare, isCollection);
             IEqualityComparer<T> equalityComparer = fuzzyCompare ? new NUnitEqualityComparerAdapter<T>(comparer) : EqualityComparer<T>.Default;
-            StrategyKey key = new(contentsArePrimitive, contentsAreSortable, fuzzyCompare);
 
             _removeItemsStrategy = InferItemsStrategy(key, c, equalityComparer);
             _removeItemsStrategy.Initialize();
@@ -72,15 +74,18 @@ namespace NUnit.Framework.Constraints
             bool contentsArePrimitive = false;
             // When T is object, we can't rely on sorting because the runtime types may vary and produce unpredictable sort orders
             bool contentsAreSortable = typeof(T) != typeof(object) && (contentsArePrimitive || c.IsSortable());
+            Type? underlyingType = c.GetType().FindPrimaryEnumerableInterfaceGenericTypeArgument();
+
             bool fuzzyCompare = comparer.IsModified;
             if (!fuzzyCompare)
             {
-                var underlyingType = c.GetType().FindPrimaryEnumerableInterfaceGenericTypeArgument();
                 fuzzyCompare = underlyingType is null || !(underlyingType.IsPrimitive || underlyingType.CanUseDefaultEquality());
             }
 
+            var isCollection = underlyingType?.GetDeclaredInterfaces().Contains(typeof(ICollection)) ?? false;
+
+            StrategyKey key = new(contentsArePrimitive, contentsAreSortable, fuzzyCompare, isCollection);
             IEqualityComparer<T> equalityComparer = fuzzyCompare ? new NUnitEqualityComparerAdapter<T>(comparer) : EqualityComparer<T>.Default;
-            StrategyKey key = new(contentsArePrimitive, contentsAreSortable, fuzzyCompare);
 
             _removeItemsStrategy = InferItemsStrategy(key, c.Cast<T>(), equalityComparer);
             _removeItemsStrategy.Initialize();
@@ -92,7 +97,7 @@ namespace NUnit.Framework.Constraints
             {
                 return new LinearSortAndScanItemsStrategy(items, comparer);
             }
-            else if (!k.FuzzyCompare)
+            else if (!k.FuzzyCompare || k.IsCollection)
             {
                 return new HashableItemsStrategy(items, comparer);
             }
