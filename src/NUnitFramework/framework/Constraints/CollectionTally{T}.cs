@@ -68,11 +68,16 @@ namespace NUnit.Framework.Constraints
         /// <param name="c">The expected collection to compare against.</param>
         /// <param name="comparer">The <see cref="NUnitEqualityComparer"/> to use for equality comparisons, which may be optimized to <see cref="EqualityComparer{T}.Default"/> when no comparer modifications are active.</param>
         public CollectionTally(System.Collections.IEnumerable c, NUnitEqualityComparer comparer)
+            : this(c, comparer, forceFuzzyCompare: false)
+        {
+        }
+
+        internal CollectionTally(System.Collections.IEnumerable c, NUnitEqualityComparer comparer, bool forceFuzzyCompare)
         {
             bool contentsArePrimitive = false;
             // When T is object, we can't rely on sorting because the runtime types may vary and produce unpredictable sort orders
             bool contentsAreSortable = typeof(T) != typeof(object) && (contentsArePrimitive || c.IsSortable());
-            bool fuzzyCompare = comparer.IsModified;
+            bool fuzzyCompare = forceFuzzyCompare || comparer.IsModified;
             if (!fuzzyCompare)
             {
                 var underlyingType = c.GetType().FindPrimaryEnumerableInterfaceGenericTypeArgument();

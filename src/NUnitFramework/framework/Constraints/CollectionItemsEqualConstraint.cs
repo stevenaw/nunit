@@ -256,15 +256,18 @@ namespace NUnit.Framework.Constraints
             }
             else
             {
-                var underlyingType = expected.GetType().FindPrimaryEnumerableInterfaceGenericTypeArgument();
-                if (underlyingType is not null && underlyingType == actual.GetType().FindPrimaryEnumerableInterfaceGenericTypeArgument())
+                var expectedUnderlyingType = expected.GetType().FindPrimaryEnumerableInterfaceGenericTypeArgument();
+                var actualUnderlyingType = actual.GetType().FindPrimaryEnumerableInterfaceGenericTypeArgument();
+
+                if (expectedUnderlyingType is not null && expectedUnderlyingType == actualUnderlyingType)
                 {
-                    var method = TallyResultCoreMethod.MakeGenericMethod(underlyingType);
+                    var method = TallyResultCoreMethod.MakeGenericMethod(expectedUnderlyingType);
                     return (CollectionTally.CollectionTallyResult)method.Invoke(null, [expected, actual, comparer])!;
                 }
 
                 // Fallback to object-based approach for non-generic collections or generic collections of different underlying type.
-                var tally = new CollectionTally<object>(expected, comparer);
+                bool forceFuzzyCompare = expectedUnderlyingType is not null && actualUnderlyingType is not null && expectedUnderlyingType != actualUnderlyingType;
+                var tally = new CollectionTally<object>(expected, comparer, forceFuzzyCompare);
                 tally.TryRemove(actual);
                 return CollectionTally.CollectionTallyResult.FromGenericResult(tally.Result);
             }
