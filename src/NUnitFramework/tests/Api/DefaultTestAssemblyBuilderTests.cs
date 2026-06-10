@@ -62,12 +62,7 @@ namespace NUnit.Framework.Tests.Api
             return result.TestCaseCount;
         }
 
-        [TestCase((string?)null)]
-        [TestCase("DynamicallyCompiledAssembly")]
-        public void LoadDynamicAssembly(string? assemblyName)
-        {
-            var compiler = new TestCompiler();
-            const string code = @"
+        private const string Code = @"
                 using NUnit.Framework;
 
                 namespace DynamicAssembly
@@ -82,10 +77,28 @@ namespace NUnit.Framework.Tests.Api
                     }
                 }";
 
-            var asm = compiler.GenerateInMemoryAssembly(code, assemblyName);
+        [Test]
+        public void LoadDynamicAssemblyWithName()
+        {
+            var compiler = new TestCompiler();
+
+            var asm = compiler.GenerateInMemoryAssembly(Code, "DynamicAssembly");
             var suite = _builder.Build(asm, new Dictionary<string, object>());
 
-            Assert.That(suite.Name, Is.Not.Null.And.Not.Empty);
+            Assert.That(suite.Name, Is.EqualTo("DynamicAssembly"));
+            Assert.That(suite.Tests[0].Name, Is.EqualTo("DynamicAssembly"));
+            Assert.That(suite.TestCaseCount, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void LoadDynamicAssemblyWithNoName()
+        {
+            var compiler = new TestCompiler();
+
+            var asm = compiler.GenerateInMemoryAssembly(Code, null);
+            var suite = _builder.Build(asm, new Dictionary<string, object>());
+
+            Assert.That(suite.Name, Is.EqualTo("?"));
             Assert.That(suite.Tests[0].Name, Is.EqualTo("DynamicAssembly"));
             Assert.That(suite.TestCaseCount, Is.EqualTo(2));
         }
