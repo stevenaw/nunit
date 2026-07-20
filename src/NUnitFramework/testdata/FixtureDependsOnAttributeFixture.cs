@@ -1,17 +1,27 @@
 // Copyright (c) Charlie Poole, Rob Prouse and Contributors. MIT License - see LICENSE.txt
 
 using System.Collections.Generic;
+using System.Threading;
 using NUnit.Framework;
 
 namespace NUnit.TestData
 {
     public static class FixtureDependencyEvents
     {
+        private static readonly object SyncRoot = new();
+
         public static List<string> Events { get; } = new();
 
         public static void Reset()
         {
-            Events.Clear();
+            lock (SyncRoot)
+                Events.Clear();
+        }
+
+        public static void Record(string value)
+        {
+            lock (SyncRoot)
+                Events.Add(value);
         }
     }
 
@@ -21,7 +31,7 @@ namespace NUnit.TestData
         [OneTimeSetUp]
         public void SetUp()
         {
-            FixtureDependencyEvents.Events.Add(nameof(FixtureDependencyBefore) + ".OneTimeSetUp");
+            FixtureDependencyEvents.Record(nameof(FixtureDependencyBefore) + ".OneTimeSetUp");
         }
 
         [Test]
@@ -33,7 +43,7 @@ namespace NUnit.TestData
         [OneTimeTearDown]
         public void TearDown()
         {
-            FixtureDependencyEvents.Events.Add(nameof(FixtureDependencyBefore) + ".OneTimeTearDown");
+            FixtureDependencyEvents.Record(nameof(FixtureDependencyBefore) + ".OneTimeTearDown");
         }
     }
 
@@ -44,7 +54,7 @@ namespace NUnit.TestData
         [OneTimeSetUp]
         public void SetUp()
         {
-            FixtureDependencyEvents.Events.Add(nameof(FixtureDependencyAfter) + ".OneTimeSetUp");
+            FixtureDependencyEvents.Record(nameof(FixtureDependencyAfter) + ".OneTimeSetUp");
         }
 
         [Test]
@@ -56,7 +66,7 @@ namespace NUnit.TestData
         [OneTimeTearDown]
         public void TearDown()
         {
-            FixtureDependencyEvents.Events.Add(nameof(FixtureDependencyAfter) + ".OneTimeTearDown");
+            FixtureDependencyEvents.Record(nameof(FixtureDependencyAfter) + ".OneTimeTearDown");
         }
     }
 
@@ -66,7 +76,7 @@ namespace NUnit.TestData
         [OneTimeSetUp]
         public void SetUp()
         {
-            FixtureDependencyEvents.Events.Add(nameof(FixtureDependencyBeforeFailing) + ".OneTimeSetUp");
+            FixtureDependencyEvents.Record(nameof(FixtureDependencyBeforeFailing) + ".OneTimeSetUp");
         }
 
         [Test]
@@ -78,7 +88,7 @@ namespace NUnit.TestData
         [OneTimeTearDown]
         public void TearDown()
         {
-            FixtureDependencyEvents.Events.Add(nameof(FixtureDependencyBeforeFailing) + ".OneTimeTearDown");
+            FixtureDependencyEvents.Record(nameof(FixtureDependencyBeforeFailing) + ".OneTimeTearDown");
         }
     }
 
@@ -89,7 +99,7 @@ namespace NUnit.TestData
         [OneTimeSetUp]
         public void SetUp()
         {
-            FixtureDependencyEvents.Events.Add(nameof(FixtureDependencyAfterFailing) + ".OneTimeSetUp");
+            FixtureDependencyEvents.Record(nameof(FixtureDependencyAfterFailing) + ".OneTimeSetUp");
         }
 
         [Test]
@@ -101,7 +111,7 @@ namespace NUnit.TestData
         [OneTimeTearDown]
         public void TearDown()
         {
-            FixtureDependencyEvents.Events.Add(nameof(FixtureDependencyAfterFailing) + ".OneTimeTearDown");
+            FixtureDependencyEvents.Record(nameof(FixtureDependencyAfterFailing) + ".OneTimeTearDown");
         }
     }
 
@@ -112,7 +122,7 @@ namespace NUnit.TestData
         [OneTimeSetUp]
         public void SetUp()
         {
-            FixtureDependencyEvents.Events.Add(nameof(FixtureDependencyCycleA) + ".OneTimeSetUp");
+            FixtureDependencyEvents.Record(nameof(FixtureDependencyCycleA) + ".OneTimeSetUp");
         }
 
         [Test]
@@ -129,7 +139,7 @@ namespace NUnit.TestData
         [OneTimeSetUp]
         public void SetUp()
         {
-            FixtureDependencyEvents.Events.Add(nameof(FixtureDependencyCycleB) + ".OneTimeSetUp");
+            FixtureDependencyEvents.Record(nameof(FixtureDependencyCycleB) + ".OneTimeSetUp");
         }
 
         [Test]
@@ -178,6 +188,65 @@ namespace NUnit.TestData
     {
         [Test]
         public void Referrer()
+        {
+            Assert.Pass();
+        }
+    }
+
+    [TestFixture]
+    [Parallelizable(ParallelScope.All)]
+    public class FixtureDependencyParallelBeforeSlow
+    {
+        [OneTimeSetUp]
+        public void SetUp()
+        {
+            FixtureDependencyEvents.Record(nameof(FixtureDependencyParallelBeforeSlow) + ".OneTimeSetUp");
+        }
+
+        [Test]
+        public void BeforeSlowTest()
+        {
+            Thread.Sleep(150);
+            Assert.Pass();
+        }
+
+        [OneTimeTearDown]
+        public void TearDown()
+        {
+            FixtureDependencyEvents.Record(nameof(FixtureDependencyParallelBeforeSlow) + ".OneTimeTearDown");
+        }
+    }
+
+    [TestFixture]
+    [Parallelizable(ParallelScope.All)]
+    [DependsOn(typeof(FixtureDependencyParallelBeforeSlow))]
+    public class FixtureDependencyParallelAfter
+    {
+        [OneTimeSetUp]
+        public void SetUp()
+        {
+            FixtureDependencyEvents.Record(nameof(FixtureDependencyParallelAfter) + ".OneTimeSetUp");
+        }
+
+        [Test]
+        public void AfterParallelDependency()
+        {
+            Assert.Pass();
+        }
+    }
+
+    [TestFixture]
+    [Parallelizable(ParallelScope.All)]
+    public class FixtureDependencyParallelIndependent
+    {
+        [OneTimeSetUp]
+        public void SetUp()
+        {
+            FixtureDependencyEvents.Record(nameof(FixtureDependencyParallelIndependent) + ".OneTimeSetUp");
+        }
+
+        [Test]
+        public void IndependentTest()
         {
             Assert.Pass();
         }

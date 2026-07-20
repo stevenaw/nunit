@@ -32,6 +32,10 @@ namespace NUnit.Framework.Internal.Execution
         public override bool IsolateChildTests => ExecutionStrategy == ParallelExecutionStrategy.NonParallel && Context.Dispatcher.LevelOfParallelism > 0;
 
         private CountdownEvent? _childTestCountdown;
+        private readonly Dictionary<WorkItem, int> _remainingDependencies = new();
+        private readonly Dictionary<WorkItem, List<WorkItem>> _dependentsByDependency = new();
+        private readonly HashSet<WorkItem> _scheduledChildren = new();
+        private bool _unscheduledChildrenSignaled;
 
         /// <summary>
         /// Construct a CompositeWorkItem for executing a test suite
@@ -277,33 +281,101 @@ namespace NUnit.Framework.Internal.Execution
                 throw new InvalidOperationException("RunChildren called but item has no children");
 
             _childTestCountdown = new CountdownEvent(childCount);
+            _remainingDependencies.Clear();
+            _dependentsByDependency.Clear();
+            _scheduledChildren.Clear();
+            _unscheduledChildrenSignaled = false;
 
             foreach (WorkItem child in Children)
             {
-                if (CheckForCancellation())
-                    break;
-
                 child.Completed += new EventHandler(OnChildItemCompleted);
                 child.InitializeContext(new TestExecutionContext(Context));
 
                 // In case we run directly, on same thread
                 child.TestWorker = TestWorker;
-
-                Context.Dispatcher.Dispatch(child);
-                childCount--;
             }
 
-            // If run was cancelled, reduce countdown by number of
-            // child items not yet staged and check if we are done.
-            if (childCount > 0)
+            BuildDependencySchedulingState();
+
+            foreach (WorkItem child in Children)
+            {
+                if (_remainingDependencies.TryGetValue(child, out int remainingDependencies) && remainingDependencies > 0)
+                    continue;
+
+                if (!DispatchChild(child))
+                    break;
+            }
+
+            if (Context.ExecutionStatus != TestExecutionStatus.Running)
             {
                 lock (_childCompletionLock)
                 {
-                    _childTestCountdown.Signal(childCount);
+                    SignalUnscheduledChildren();
                     if (_childTestCountdown.CurrentCount == 0)
                         OnAllChildItemsCompleted();
                 }
             }
+        }
+
+        private void BuildDependencySchedulingState()
+        {
+            var fixtureByType = new Dictionary<Type, WorkItem>();
+
+            foreach (WorkItem child in Children)
+            {
+                if (child.Test is Test fixture && fixture.TypeInfo?.Type is Type fixtureType)
+                    fixtureByType[fixtureType] = child;
+            }
+
+            foreach (WorkItem child in Children)
+            {
+                if (child.Test is not Test fixture || fixture.RunState == RunState.NotRunnable)
+                    continue;
+
+                if (fixture.Properties.Get(PropertyNames.DependsOn) is not Type dependencyType)
+                    continue;
+
+                if (!fixtureByType.TryGetValue(dependencyType, out WorkItem? dependencyChild))
+                    continue;
+
+                if (dependencyChild.Test is Test dependencyFixture && dependencyFixture.RunState == RunState.NotRunnable)
+                    continue;
+
+                _remainingDependencies.TryGetValue(child, out int remainingDependencies);
+                _remainingDependencies[child] = remainingDependencies + 1;
+
+                if (!_dependentsByDependency.TryGetValue(dependencyChild, out List<WorkItem>? dependents))
+                {
+                    dependents = new List<WorkItem>();
+                    _dependentsByDependency[dependencyChild] = dependents;
+                }
+
+                dependents.Add(child);
+            }
+        }
+
+        private bool DispatchChild(WorkItem child)
+        {
+            if (!_scheduledChildren.Add(child))
+                return true;
+
+            if (CheckForCancellation())
+                return false;
+
+            Context.Dispatcher.Dispatch(child);
+            return true;
+        }
+
+        private void SignalUnscheduledChildren()
+        {
+            if (_unscheduledChildrenSignaled)
+                return;
+
+            int unscheduledCount = Children.Count - _scheduledChildren.Count;
+            if (unscheduledCount > 0)
+                _childTestCountdown!.Signal(unscheduledCount);
+
+            _unscheduledChildrenSignaled = true;
         }
 
         private void SkipFixture(ResultState resultState, string message, string? stackTrace)
@@ -374,6 +446,31 @@ namespace NUnit.Framework.Internal.Execution
 
                     if (Context.StopOnError && childTask.Result.ResultState.Status == TestStatus.Failed)
                         Context.ExecutionStatus = TestExecutionStatus.StopRequested;
+
+                    if (_dependentsByDependency.TryGetValue(childTask, out List<WorkItem>? dependents))
+                    {
+                        foreach (WorkItem dependentChild in dependents)
+                        {
+                            if (!_remainingDependencies.TryGetValue(dependentChild, out int remainingDependencies))
+                                continue;
+
+                            remainingDependencies--;
+                            if (remainingDependencies <= 0)
+                            {
+                                _remainingDependencies.Remove(dependentChild);
+
+                                if (!DispatchChild(dependentChild))
+                                    SignalUnscheduledChildren();
+                            }
+                            else
+                            {
+                                _remainingDependencies[dependentChild] = remainingDependencies;
+                            }
+                        }
+                    }
+
+                    if (Context.ExecutionStatus != TestExecutionStatus.Running)
+                        SignalUnscheduledChildren();
 
                     // Check to see if all children completed
                     // _childTestCountdown is created before running child tasks, so is not null here.
