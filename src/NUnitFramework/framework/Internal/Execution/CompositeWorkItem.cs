@@ -487,9 +487,15 @@ namespace NUnit.Framework.Internal.Execution
         private void OnAllChildItemsCompleted()
         {
             if (Context.ExecutionStatus == TestExecutionStatus.AbortRequested)
+            {
+                // When abort is requested, set result to Cancelled before completing
+                Result.SetResult(ResultState.Cancelled, TestResult.USER_CANCELLED_MESSAGE);
                 WorkItemComplete();
+            }
             else
+            {
                 Context.Dispatcher.Dispatch(new OneTimeTearDownWorkItem(this));
+            }
         }
 
         private readonly object _cancelLock = new();
@@ -568,6 +574,14 @@ namespace NUnit.Framework.Internal.Execution
                             Result.SetResult(ResultState.Cancelled, "Cancelled by user");
                             break;
                         }
+                    }
+
+                    // If an abort was requested but no child was marked as cancelled,
+                    // mark the suite itself as cancelled.
+                    if (Context.ExecutionStatus == TestExecutionStatus.AbortRequested &&
+                        Result.ResultState != ResultState.Cancelled)
+                    {
+                        Result.SetResult(ResultState.Cancelled, TestResult.USER_CANCELLED_MESSAGE);
                     }
 
                     _originalWorkItem.WorkItemComplete();

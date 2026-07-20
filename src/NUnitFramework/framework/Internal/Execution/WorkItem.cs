@@ -25,6 +25,7 @@ namespace NUnit.Framework.Internal.Execution
     public abstract class WorkItem : IDisposable
     {
         private static readonly Logger Log = InternalTrace.GetLogger("WorkItem");
+        private int _workItemCompleted = 0; // 0 = not completed, 1 = completed
 
         #region Construction and Initialization
 
@@ -315,6 +316,11 @@ namespace NUnit.Framework.Internal.Execution
         /// </summary>
         protected void WorkItemComplete()
         {
+            // Ensure this method is only executed once, even if called multiple times
+            // This can happen when a forced stop races with normal completion
+            if (Interlocked.Exchange(ref _workItemCompleted, 1) == 1)
+                return; // Already completed
+
             State = WorkItemState.Complete;
 
             Result.StartTime = Context.StartTime;
