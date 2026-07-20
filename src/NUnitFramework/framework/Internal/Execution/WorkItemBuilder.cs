@@ -105,7 +105,6 @@ namespace NUnit.Framework.Internal.Execution
 
             MarkCircularDependenciesAsInvalid(fixturesByType, dependencyByFixture);
             MarkDependencyAndOrderConflictsAsInvalid(fixturesByType, dependencyByFixture);
-
         }
 
         private static void MarkCircularDependenciesAsInvalid(Dictionary<Type, Test> fixturesByType, Dictionary<Test, Type> dependencyByFixture)
