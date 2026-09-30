@@ -14,7 +14,7 @@ namespace NUnit.Framework.Internal.Filters
     ///
     /// This is helpful when you may want to run a subset of tests (eg, across 3 machines - or partitions), each with a separately assigned partition number and fixed partition count
     /// </summary>
-    internal sealed class PartitionFilter : TestFilter
+    internal abstract class PartitionFilter : TestFilter
     {
         /// <summary>
         /// The matching partition number (between 1 and Partition Count, inclusive) this filter should match on
@@ -61,7 +61,7 @@ namespace NUnit.Framework.Internal.Filters
                 // Return a new PartitionFilter with the parsed values
                 if (number >= 1 && number <= count)
                 {
-                    partitionFilter = new PartitionFilter(number, count);
+                    partitionFilter = new TestPartitionFilter(number, count);
                     return true;
                 }
             }
@@ -76,10 +76,6 @@ namespace NUnit.Framework.Internal.Filters
         /// </summary>
         public override bool Match(ITest test)
         {
-            // Do not match a test Suite, only match individual tests
-            if (test.IsSuite)
-                return false;
-
             // Calculate the partition number for the provided Test
             var partitionForTest = ComputePartitionNumber(test);
 
@@ -95,8 +91,10 @@ namespace NUnit.Framework.Internal.Filters
         /// <returns>The added XML node</returns>
         public override TNode AddToXml(TNode parentNode, bool recursive)
         {
-            return parentNode.AddElement("partition", $"{PartitionNumber}/{PartitionCount}");
+            return parentNode.AddElement("partition", GetXmlValue());
         }
+
+        public abstract string GetXmlValue();
 
         /// <summary>
         /// Computes the Partition Number that has been assigned to the provided ITest value (based upon the configured Partition Count)
@@ -130,5 +128,43 @@ namespace NUnit.Framework.Internal.Filters
             return BitConverter.ToUInt32(hashValue[..4]);
 #endif
         }
+    }
+
+    internal sealed class TestPartitionFilter : PartitionFilter
+    {
+        public TestPartitionFilter(uint partitionNumber, uint partitionCount) : base(partitionNumber, partitionCount)
+        {
+        }
+
+        public override bool Match(ITest test)
+        {
+            // Do not match a test Suite, only match individual tests
+            if (test.IsSuite)
+                return false;
+
+            return base.Match(test);
+        }
+
+        public override string GetXmlValue()
+            => $"{PartitionNumber}/{PartitionCount}";
+    }
+
+    internal sealed class FixturePartitionFilter : PartitionFilter
+    {
+        public FixturePartitionFilter(uint partitionNumber, uint partitionCount) : base(partitionNumber, partitionCount)
+        {
+        }
+
+        public override bool Match(ITest test)
+        {
+            // Only match TestFixtures, not individual tests
+            if (!test.IsSuite)
+                return false;
+
+            return base.Match(test);
+        }
+
+        public override string GetXmlValue()
+            => $"{PartitionNumber}/{PartitionCount}:fixture";
     }
 }

@@ -44,17 +44,17 @@ namespace NUnit.Framework.Tests.Internal.Filters
         public const string DUMMY_CLASS_REGEX = "NUnit.*\\+DummyFixture";
         public const string ANOTHER_CLASS_REGEX = "NUnit.*\\+AnotherFixture";
 
-        protected readonly TestSuite DummyFixtureSuite = TestBuilder.MakeFixture(typeof(DummyFixture));
-        protected readonly TestSuite AnotherFixtureSuite = TestBuilder.MakeFixture(typeof(AnotherFixture));
-        protected readonly TestSuite YetAnotherFixtureSuite = TestBuilder.MakeFixture(typeof(YetAnotherFixture));
-        protected readonly TestSuite FixtureWithMultipleTestsSuite = TestBuilder.MakeFixture(typeof(FixtureWithMultipleTests));
-        protected readonly TestSuite FixtureWithLongTestCaseNamesSuite = TestBuilder.MakeFixture(typeof(FixtureWithLongTestCaseNames));
-        protected readonly TestSuite NestingFixtureSuite = TestBuilder.MakeFixture(typeof(NestingFixture));
-        protected readonly TestSuite NestedFixtureSuite = TestBuilder.MakeFixture(typeof(NestingFixture.NestedFixture));
-        protected readonly TestSuite EmptyNestedFixtureSuite = TestBuilder.MakeFixture(typeof(NestingFixture.EmptyNestedFixture));
-        protected readonly TestSuite TopLevelSuite = new TestSuite("MySuite");
-        protected readonly TestSuite ExplicitFixtureSuite = TestBuilder.MakeFixture(typeof(ExplicitFixture));
-        protected readonly TestSuite SpecialFixtureSuite = TestBuilder.MakeFixture(typeof(SpecialCharactersFixture));
+        protected static readonly TestSuite DummyFixtureSuite = TestBuilder.MakeFixture(typeof(DummyFixture));
+        protected static readonly TestSuite AnotherFixtureSuite = TestBuilder.MakeFixture(typeof(AnotherFixture));
+        protected static readonly TestSuite YetAnotherFixtureSuite = TestBuilder.MakeFixture(typeof(YetAnotherFixture));
+        protected static readonly TestSuite FixtureWithMultipleTestsSuite = TestBuilder.MakeFixture(typeof(FixtureWithMultipleTests));
+        protected static readonly TestSuite FixtureWithLongTestCaseNamesSuite = TestBuilder.MakeFixture(typeof(FixtureWithLongTestCaseNames));
+        protected static readonly TestSuite NestingFixtureSuite = TestBuilder.MakeFixture(typeof(NestingFixture));
+        protected static readonly TestSuite NestedFixtureSuite = TestBuilder.MakeFixture(typeof(NestingFixture.NestedFixture));
+        protected static readonly TestSuite EmptyNestedFixtureSuite = TestBuilder.MakeFixture(typeof(NestingFixture.EmptyNestedFixture));
+        protected static readonly TestSuite TopLevelSuite = new TestSuite("MySuite");
+        protected static readonly TestSuite ExplicitFixtureSuite = TestBuilder.MakeFixture(typeof(ExplicitFixture));
+        protected static readonly TestSuite SpecialFixtureSuite = TestBuilder.MakeFixture(typeof(SpecialCharactersFixture));
 
         [OneTimeSetUp]
         public void SetUpSuite()
